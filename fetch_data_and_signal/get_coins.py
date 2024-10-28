@@ -8,7 +8,6 @@ from binance.client import Client
 import numpy as np
 
 async def get_futures_symbols_below_price(exchange_name='bybit',coins=[], max_price=150):
-    # Инициализируем биржу через ccxt
     exchange = getattr(ccxt, exchange_name)({
         'enableRateLimit': True
     })
@@ -16,7 +15,6 @@ async def get_futures_symbols_below_price(exchange_name='bybit',coins=[], max_pr
 
     symbols_below_max_price = []
 
-    # Функция для асинхронного получения данных о символе
     async def fetch_symbol_price(symbol):
         try:
             await asyncio.sleep(np.random.choice(np.linspace(0, 5, 20)))
@@ -27,12 +25,10 @@ async def get_futures_symbols_below_price(exchange_name='bybit',coins=[], max_pr
         except Exception as e:
             print(f"Ошибка при обработке {symbol}: {str(e)}")
 
-    # Создаем задачи для всех фьючерсных символов
     tasks = [fetch_symbol_price(symbol) for symbol in coins]
 
     await asyncio.gather(*tasks)
 
-    # Закрываем соединение с биржей
     await exchange.close()
 
     return symbols_below_max_price

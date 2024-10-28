@@ -67,7 +67,7 @@ def get_df_binance(client,coin,timeframe,limit=200):
         return data
     except Exception as e:
         logging.error(msg=f'{e}\nline 123')
-        return
+        return False
 
 
 def get_df(bybit,client,coin,timeframe):

@@ -41,25 +41,17 @@ class BackTestStrategy(bt.Strategy):
                     self.order = None
                     #print(f"CLOSE SHORT at {self.data.close[0]}")
 
-            if signal_row['Buy'] == True:# and self.position.size == 0:
+            if signal_row['Buy'] == True and self.position.size <= 0:
                 if self.position.size < 0:
                     self.close()
                 self.buy_price = self.data.high[0]
                 self.order = self.buy(size=(100/self.data.close[0]))
-                #print(f"BUY SIGNAL at {self.buy_price}")
 
-            # Открытие позиции на продажу
-            elif signal_row['Sell'] == True:# and self.position.size == 0:
+            elif signal_row['Sell'] == True and self.position.size >= 0:
                 if self.position.size > 0:
                     self.close()
                 self.sell_price = self.data.low[0]
                 self.order = self.sell(size=(100/self.data.close[0]))
-                #print(f"SELL SIGNAL at {self.sell_price}")
-
-
-    def notify_order(self, order):
-        if order.status in [order.Completed, order.Canceled]:
-            self.order = None
 
 
 def backtest_coin(df,signals,tp,sl):

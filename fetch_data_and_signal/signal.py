@@ -33,21 +33,27 @@ class RangeFilterIndicator:
 
         return smooth_rng
 
-    def rng_filter(self, data, smooth_rng):
-        rngfilt = data['Close'].copy()  # Копируем close для создания rngfilt
+
+    def rng_filter(self,data, smooth_rng):
+        rngfilt = data['Close'].copy()
+        x = data['Close'].values
+        r = smooth_rng.values
+        rngfilt_values = rngfilt.values
+
+        rngfilt_values[0] = x[0]
+
         for i in range(1, len(data)):
-            prev_rngfilt = rngfilt.iloc[i - 1] if not np.isnan(rngfilt.iloc[i - 1]) else data['Close'].iloc[i]
-            x = data['Close'].iloc[i]
-            r = smooth_rng.iloc[i]
-
-            if x > prev_rngfilt:
-                rngfilt.iloc[i] = prev_rngfilt if (x - r) < prev_rngfilt else (x - r)
+            prev_rngfilt = rngfilt_values[i - 1]
+            if x[i] > prev_rngfilt:
+                rngfilt_values[i] = prev_rngfilt if (x[i] - r[i]) < prev_rngfilt else (x[i] - r[i])
             else:
-                rngfilt.iloc[i] = prev_rngfilt if (x + r) > prev_rngfilt else (x + r)
+                rngfilt_values[i] = prev_rngfilt if (x[i] + r[i]) > prev_rngfilt else (x[i] + r[i])
 
+        rngfilt[:] = rngfilt_values
         return rngfilt
 
-    def super_trend(self, data):
+
+    def super_trend(self,data):
         hl2 = (data['High'] + data['Low']) / 2
         atr = volatility.average_true_range(data['High'], data['Low'], data['Close'], window=self.super_trend_period)
         up = hl2 - self.factor * atr
@@ -61,12 +67,32 @@ class RangeFilterIndicator:
         trend_up.iloc[0] = up.iloc[0]
         trend_down.iloc[0] = down.iloc[0]
         tsl.iloc[0] = trend_up.iloc[0]
+
+
+        close_values = data['Close'].values
+        up_values = up.values
+        down_values = down.values
+
         for i in range(1, len(data)):
-            trend_up.iloc[i] = max(up.iloc[i], trend_up.iloc[i - 1]) if data['Close'].iloc[i - 1] > trend_up.iloc[i - 1] else up.iloc[i]
-            trend_down.iloc[i] = min(down.iloc[i], trend_down.iloc[i - 1]) if data['Close'].iloc[i - 1] < trend_down.iloc[i - 1] else down.iloc[i]
-            trend.iloc[i] = 1 if data['Close'].iloc[i] > trend_down.iloc[i - 1] else -1 if data['Close'].iloc[i] < trend_up.iloc[i - 1] else trend.iloc[i - 1]
-            tsl.iloc[i] = trend_up.iloc[i] if trend.iloc[i] == 1 else trend_down.iloc[i]
+            if close_values[i - 1] > trend_up.iloc[i - 1]:
+                trend_up.iloc[i] = max(up_values[i], trend_up.iloc[i - 1])
+            else:
+                trend_up.iloc[i] = up_values[i]
+
+            if close_values[i - 1] < trend_down.iloc[i - 1]:
+                trend_down.iloc[i] = min(down_values[i], trend_down.iloc[i - 1])
+            else:
+                trend_down.iloc[i] = down_values[i]
+
+        trend[1:] = np.where(data['Close'][1:].values > trend_down[:-1].values, 1,
+                             np.where(data['Close'][1:].values < trend_up[:-1].values, -1, trend[:-1].values))
+
+        tsl[1:] = np.where(trend[1:] == 1, trend_up[1:], trend_down[1:])
+
         return tsl
+
+
+
 
     def generate_signals(self, data):
         smooth_rng_values = self.smooth_rng(data)
@@ -85,10 +111,9 @@ class RangeFilterIndicator:
     def crossunder(self, series, level=0):
         return (series.shift(1) >= level.shift(1)) & (series <= level) & (series.shift(1) > level)
 
-    def signal(self, data):
-        df=data.copy()
-        data = pd.DataFrame(index=df.index)
+    def signal(self, df):
         long_condition, short_condition = self.generate_signals(df)
-        data['Buy'] = long_condition
-        data['Sell'] = short_condition
-        return data
+        return pd.DataFrame({
+            'Buy': long_condition,
+            'Sell': short_condition
+        }, index=df.index)

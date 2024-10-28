@@ -4,20 +4,16 @@ import pandas as pd
 
 
 def profit_by_coin(df: pd.DataFrame):
-    # Найдем лучший результат для каждой монеты
     best_keys = df.loc[df.groupby('coin')['total_profit'].idxmax()]
 
-    # Создаем пустой результат с нужными столбцами
     result = best_keys[['period', 'multiplier', 'factor', 'super_trend_period']].copy()
     result['profit'] = 0.0
     result['profit_trades'] = 0
     result['loss_trades'] = 0
     result['n'] = 0
 
-    # Оставляем только нужные столбцы для работы
     df_filtered = df[['coin', 'period', 'multiplier', 'factor', 'super_trend_period', 'total_profit', 'profit_trades', 'loss_trades']]
 
-    # Выполняем объединение по общим условиям
     for idx, row in best_keys.iterrows():
         matching_rows = df_filtered[
             (df_filtered['period'] == row['period']) &
@@ -39,17 +35,14 @@ def profit_by_coin(df: pd.DataFrame):
 
 
 def profit_by_coin_using_signals(df: pd.DataFrame, signals: list):
-    # Создаем пустой DataFrame для результата
     result = pd.DataFrame(signals)
     result['profit'] = 0.0
     result['profit_trades'] = 0
     result['loss_trades'] = 0
     result['n'] = 0
 
-    # Оставляем только нужные столбцы для фильтрации
     df_filtered = df[['coin', 'period', 'multiplier', 'factor', 'super_trend_period', 'total_profit', 'profit_trades', 'loss_trades']]
 
-    # Итерируем по каждому сигналу
     for idx, signal in enumerate(signals):
         matching_rows = df_filtered[
             (df_filtered['period'] == signal['period']) &
@@ -82,9 +75,7 @@ def analyze_parameters(df: pd.DataFrame, parameter: str):
 
 
 def select_top_percent_coins(df: pd.DataFrame, top:int):
-    """
-    Функция для отбора монет, максимальный профит которых находится в топ 25%.
-    """
+
     max_profit_by_coin = df.groupby('coin')['total_profit'].max().reset_index()
 
     q3 = max_profit_by_coin['total_profit'].quantile(1-(top/100))
