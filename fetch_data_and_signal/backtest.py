@@ -24,22 +24,17 @@ class BackTestStrategy(bt.Strategy):
 
     def next(self):
         timestamp = self.data.datetime.datetime(0)
-        # Проверяем наличие сигнала на покупку
         if timestamp in self.signals.index:
             signal_row = self.signals.shift(1).loc[timestamp]
-            if self.position.size > 0:  # Лонг позиция
+            if self.position.size > 0:
                 if self.data.close[0] >= self.buy_price * (1 + self.params.take_profit) or \
                         self.data.close[0] <= self.buy_price * (1 - self.params.stop_loss):
                     self.close()
-                    self.order = None
-                    #print(f"CLOSE LONG at {self.data.close[0]}")
 
-            elif self.position.size < 0:  # Шорт позиция
+            elif self.position.size < 0:
                 if self.data.close[0] <= self.sell_price * (1 - self.params.take_profit) or \
                         self.data.close[0] >= self.sell_price * (1 + self.params.stop_loss):
                     self.close()
-                    self.order = None
-                    #print(f"CLOSE SHORT at {self.data.close[0]}")
 
             if signal_row['Buy'] == True and self.position.size <= 0:
                 if self.position.size < 0:
@@ -52,6 +47,11 @@ class BackTestStrategy(bt.Strategy):
                     self.close()
                 self.sell_price = self.data.low[0]
                 self.order = self.sell(size=(100/self.data.close[0]))
+
+
+    def notify_order(self, order):
+        if order.status in [order.Completed, order.Canceled]:
+            self.order = None
 
 
 def backtest_coin(df,signals,tp,sl):

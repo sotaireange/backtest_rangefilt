@@ -32,7 +32,7 @@ def get_df_bybit(session,coin,timeframe,limit=1000):
         return False
 
 
-def get_df_binance(client,coin,timeframe,limit=200):
+def get_df_binance(client,coin,timeframe,limit=1000):
     try:
         if int(timeframe)>=60:
             timeframe=int(timeframe)//60
