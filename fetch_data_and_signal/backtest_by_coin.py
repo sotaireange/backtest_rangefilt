@@ -50,7 +50,7 @@ async def backtest_coin_with_param(data):
     rows=[]
 
     for i,coin in enumerate(coins):
-        df=get_df(bybit,client,coin,timeframe)
+        df=get_df(bybit,client,coin,timeframe,data['limit'])
         try:
             strategy=RangeFilterIndicator(data_signal)
             signals=strategy.signal(df)

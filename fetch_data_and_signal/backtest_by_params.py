@@ -27,7 +27,7 @@ def iter_coin_by_params(coins,bybit,client,timeframe,data_signals,data,file_path
 
             while (df is False) and k<10:
 
-                df=get_df(bybit,client,coin,timeframe)
+                df=get_df(bybit,client,coin,timeframe,data['limit'])
 
                 if df is False:
                     logging.info(f"Не найдена монетка {coin}, повторно")

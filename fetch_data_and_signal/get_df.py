@@ -70,9 +70,9 @@ def get_df_binance(client,coin,timeframe,limit=1000):
         return False
 
 
-def get_df(bybit,client,coin,timeframe):
+def get_df(bybit,client,coin,timeframe,limit=1000):
     if bybit:
-        df= get_df_bybit(client,coin,timeframe)
+        df= get_df_bybit(client,coin,timeframe,limit)
     else:
-        df= get_df_binance(client,coin,timeframe)
+        df= get_df_binance(client,coin,timeframe,limit)
     return df
