@@ -70,7 +70,6 @@ async def backtest_coin_with_param(data):
                 'total_profit': res['pnl']['net']['total'],
             }
             rows.append(row)
-            await asyncio.sleep(1)
         except Exception as e:
             logging.error(f'Exception occurred {e}')
 

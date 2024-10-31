@@ -20,10 +20,10 @@ from .backtest import backtest_coin
 
 def iter_coin_by_params(coins,bybit,client,timeframe,data_signals,data,file_path,fieldnames):
     try:
+        time.sleep(np.random.randint(1,3))
         for i,coin in enumerate(coins):
             df=False
             k=0
-            time.sleep(np.random.randint(1,3))
 
             while (df is False) and k<10:
 
