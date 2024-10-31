@@ -25,7 +25,7 @@ class BackTestStrategy(bt.Strategy):
     def next(self):
         timestamp = self.data.datetime.datetime(0)
         if timestamp in self.signals.index:
-            signal_row = self.signals.shift(1).loc[timestamp]
+            signal_row = self.signals.loc[timestamp]
             if self.position.size > 0:
                 if self.data.close[0] >= self.buy_price * (1 + self.params.take_profit) or \
                         self.data.close[0] <= self.buy_price * (1 - self.params.stop_loss):
