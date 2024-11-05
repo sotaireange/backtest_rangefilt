@@ -27,7 +27,6 @@ class RangeFilterIndicator:
 
     def smooth_rng(self, data):
         wper = max(1, int(np.floor(self.period / 3) - 1))
-        print(wper)
         price_diff = abs(data['Close'] - data['Close'].shift(1))
         avrng=trend.SMAIndicator(price_diff, window=self.period).sma_indicator()
         smooth_rng=trend.SMAIndicator(avrng, window=wper).sma_indicator()*self.multiplier
