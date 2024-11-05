@@ -40,13 +40,13 @@ class BackTestStrategy(bt.Strategy):
                 if self.position.size < 0:
                     self.close()
                 self.buy_price = self.data.high[0]
-                self.order = self.buy(size=(100/self.data.close[0]))
+                self.order = self.buy(size=(100/self.data.close[0])) #Здесь указываем сколько 1 позиция(100USDT)
 
             elif signal_row['Sell'] == True and self.position.size >= 0:
                 if self.position.size > 0:
                     self.close()
                 self.sell_price = self.data.low[0]
-                self.order = self.sell(size=(100/self.data.close[0]))
+                self.order = self.sell(size=(100/self.data.close[0]))#Здесь указываем сколько 1 позиция(100USDT)
 
 
     def notify_order(self, order):
@@ -59,7 +59,7 @@ def backtest_coin(df,signals,tp,sl):
     data=bt.feeds.PandasData(dataname=df)
     cerebro.addstrategy(BackTestStrategy,signal=signals,take_profit=tp,stop_loss=sl)
     cerebro.adddata(data)
-    cerebro.broker.setcash(1000)
+    cerebro.broker.setcash(1000) #Исходный капитал
     cerebro.broker.setcommission(commission=0.001)
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer,_name='tradeanalyzer')
     strats=cerebro.run()

@@ -27,6 +27,7 @@ class RangeFilterIndicator:
 
     def smooth_rng(self, data):
         wper = max(1, int(np.floor(self.period / 3) - 1))
+        print(wper)
         price_diff = abs(data['Close'] - data['Close'].shift(1))
         avrng=trend.SMAIndicator(price_diff, window=self.period).sma_indicator()
         smooth_rng=trend.SMAIndicator(avrng, window=wper).sma_indicator()*self.multiplier
@@ -53,7 +54,7 @@ class RangeFilterIndicator:
         return rngfilt
 
 
-    def super_trend(self,data):
+    def super_trend(self, data):
         hl2 = (data['High'] + data['Low']) / 2
         atr = volatility.average_true_range(data['High'], data['Low'], data['Close'], window=self.super_trend_period)
         up = hl2 - self.factor * atr
@@ -67,27 +68,12 @@ class RangeFilterIndicator:
         trend_up.iloc[0] = up.iloc[0]
         trend_down.iloc[0] = down.iloc[0]
         tsl.iloc[0] = trend_up.iloc[0]
-
-
-        close_values = data['Close'].values
-        up_values = up.values
-        down_values = down.values
-
         for i in range(1, len(data)):
-            if close_values[i - 1] > trend_up.iloc[i - 1]:
-                trend_up.iloc[i] = max(up_values[i], trend_up.iloc[i - 1])
-            else:
-                trend_up.iloc[i] = up_values[i]
+            trend_up.iloc[i] = max(up.iloc[i], trend_up.iloc[i - 1]) if data['Close'].iloc[i - 1] > trend_up.iloc[i - 1] else up.iloc[i]
+            trend_down.iloc[i] = min(down.iloc[i], trend_down.iloc[i - 1]) if data['Close'].iloc[i - 1] < trend_down.iloc[i - 1] else down.iloc[i]
+            trend.iloc[i] = 1 if data['Close'].iloc[i] > trend_down.iloc[i - 1] else -1 if data['Close'].iloc[i] < trend_up.iloc[i - 1] else trend.iloc[i - 1]
+            tsl.iloc[i] = trend_up.iloc[i] if trend.iloc[i] == 1 else trend_down.iloc[i]
 
-            if close_values[i - 1] < trend_down.iloc[i - 1]:
-                trend_down.iloc[i] = min(down_values[i], trend_down.iloc[i - 1])
-            else:
-                trend_down.iloc[i] = down_values[i]
-
-        trend[1:] = np.where(data['Close'][1:].values > trend_down[:-1].values, 1,
-                             np.where(data['Close'][1:].values < trend_up[:-1].values, -1, trend[:-1].values))
-
-        tsl[1:] = np.where(trend[1:] == 1, trend_up[1:], trend_down[1:])
 
         return tsl
 
