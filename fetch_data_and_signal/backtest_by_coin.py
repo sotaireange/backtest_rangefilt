@@ -45,6 +45,7 @@ async def backtest_coin_with_param(data):
     for i,coin in enumerate(coins):
         df=get_df(bybit,client,coin,timeframe,data['limit'])
         try:
+
             signals=get_signal(df,data_signal,indicator)
             res=backtest_coin(df,signals,data['tp'],data['sl'])
 
@@ -52,7 +53,7 @@ async def backtest_coin_with_param(data):
             row = get_row(coin,timeframe,data_signal,res,indicator)
             rows.append(row)
         except Exception as e:
-            logging.error(f'Exception occurred {e}')
+            logging.error(f'Exception occurred {e}',exc_info=True)
 
 
     with open(file_path, 'a', newline='') as file:

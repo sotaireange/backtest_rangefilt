@@ -24,7 +24,7 @@ def get_matching_rows(df_filtered,row,indicator,coin=False):
             (df_filtered['aroon_smooth'] == row['aroon_smooth']) &
             (df_filtered['aroon_sign_len'] == row['aroon_sign_len']) &
             (df_filtered['aroon_gain_limit'] == row['aroon_gain_limit']) &
-            ((df_filtered['coin'] != row['coin']) if not coin else True)
+            ((df_filtered['coin'] != row['coin']) if coin else True)
             ]
 
     return matching_rows
@@ -59,9 +59,9 @@ def profit_by_coin_using_signals(df: pd.DataFrame, signals: list,indicator):
     result['profit_trades'] = 0
     result['loss_trades'] = 0
     result['n'] = 0
-
-    df_filtered = df[['coin', 'period', 'multiplier', 'factor', 'super_trend_period', 'total_profit', 'profit_trades', 'loss_trades']]
-
+    keys=get_keys(indicator)
+    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades']
+    df_filtered = df[keys]
     for idx, signal in enumerate(signals):
         matching_rows = get_matching_rows(df_filtered,signal,indicator)
 

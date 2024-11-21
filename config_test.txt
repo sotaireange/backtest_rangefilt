@@ -1,36 +1,69 @@
-{
-    "params": {
-        "period": {
-            "min": 15,
-            "max": 40
-        },
-        "multiplier": {
-            "min": 1,
-            "max": 2
-        },
-        "factor": {
-            "min": 1,
-            "max": 2
-        },
-        "super_trend_period": {
-            "min": 4,
-            "max": 20
-        },
-        "timeframe": 60
+{"rangefilt": {
+  "params": {
+    "period": {
+      "min": 6,
+      "max": 30
     },
-    "by_coin": {
-        "period": 13,
-        "multiplier": 1,
-        "factor": 2,
-        "super_trend_period": 15,
-        "timeframe": 30
+    "multiplier": {
+      "min": 2,
+      "max": 5
     },
-    "top": [
-        25
-    ],
-    "bybit": 0,
-    "tp": 0.04,
-    "sl": 0.016,
-    "core": 10,
-    "limit": 200
+    "factor": {
+      "min": 1,
+      "max": 5
+    },
+    "super_trend_period": {
+      "min":6,
+      "max": 30
+    },
+    "timeframe": 30
+  },
+  "by_coin": {
+    "period": 13,
+    "multiplier": 1,
+    "factor": 2,
+    "super_trend_period": 15,
+    "timeframe": 30
+  }},
+  "aroon": {
+  "params": {
+    "aroon_length_trend": {
+      "min": 12,
+      "max": 13
+    },
+    "aroon_length": {
+      "min": 2,
+      "max": 3
+    },
+    "aroon_smooth": {
+      "min": 1,
+      "max": 2
+    },
+    "aroon_sign_len": {
+      "min":6,
+      "max": 10
+    },
+    "aroon_gain_limit": {
+      "min":10,
+      "max": 10
+    },
+    "timeframe": 30
+  },
+  "by_coin": {
+    "aroon_length_trend": 13,
+    "aroon_length": 1,
+    "aroon_smooth": 2,
+    "aroon_sign_len": 2,
+    "aroon_gain_limit": 15,
+    "timeframe": 30
+  }},
+  "top": [
+    25
+  ],
+  "indicator": "aroon", ##### ЗДЕСЬ ВЫБИРАЕМ "aroon" для Аруна, "rangefilt" Для RangeFilt
+  "bybit": 0,
+  "tp": 0.04,
+  "sl": 0.016,
+  "core": 10,
+  "limit": 500
 }

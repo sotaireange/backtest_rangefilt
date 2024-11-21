@@ -14,16 +14,16 @@ def full_analysis(data):
     params=get_data_for_signal(data,only_params=True,indicator=indicator)
     bybit=data.get('bybit',1)
     stock_text='bybit' if bybit else 'binance'
-    timeframe=data['params']['timeframe']
+    timeframe=data[indicator]['params']['timeframe']
     folder_path=get_file_or_patch_name(params,timeframe,indicator,stock_text)
     file_path = os.path.join(folder_path, 'results_coins.csv')
     print(file_path)
     df=pd.read_csv(file_path,low_memory=False)
     top=data.get('top',[10,25,50])
 
-    data_signal=get_data_for_signal(data,indicator)
+    data_signal=get_data_for_signal(data,indicator=indicator)
 
-    result:pd.DataFrame=profit_by_coin_using_signals(df,data_signal)
+    result:pd.DataFrame=profit_by_coin_using_signals(df,data_signal,indicator)
     file_path_by_param=os.path.join(folder_path,f'by_signals.csv')
     result.to_csv(file_path_by_param,index=False,header=True, columns=result.columns)
     keys=get_keys(indicator)

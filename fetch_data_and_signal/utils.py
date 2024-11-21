@@ -76,9 +76,9 @@ def get_row(coin,timeframe,data_signal,res,indicator):
             'aroon_smooth':data_signal['aroon_smooth'],
             'aroon_sign_len':data_signal['aroon_sign_len'],
             'aroon_gain_limit':data_signal['aroon_gain_limit'],
-            'total_trades': float(res['total']['total']),
+            'total_trades': float(res.get('total',{}).get('total',0)),
             'profit_trades': float(res.get('won',{}).get('total',0)),
             'loss_trades': float(res.get('loss',{}).get('total',0)),
-            'total_profit': res['pnl']['net']['total'],
+            'total_profit': res.get('pnl',{}).get('net',{}).get('total',0),
         }
     return row
