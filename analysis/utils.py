@@ -2,26 +2,45 @@ import json
 import pandas as pd
 
 
+def get_keys(indicator):
+    if indicator=='rangefilt':
+        return ['period', 'multiplier', 'factor', 'super_trend_period']
+    if indicator=='aroon':
+        return ['aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit']
 
-def profit_by_coin(df: pd.DataFrame):
-    best_keys = df.loc[df.groupby('coin')['total_profit'].idxmax()]
-
-    result = best_keys[['period', 'multiplier', 'factor', 'super_trend_period']].copy()
-    result['profit'] = 0.0
-    result['profit_trades'] = 0
-    result['loss_trades'] = 0
-    result['n'] = 0
-
-    df_filtered = df[['coin', 'period', 'multiplier', 'factor', 'super_trend_period', 'total_profit', 'profit_trades', 'loss_trades']]
-
-    for idx, row in best_keys.iterrows():
+def get_matching_rows(df_filtered,row,indicator,coin=False):
+    if indicator=='rangefilt':
         matching_rows = df_filtered[
             (df_filtered['period'] == row['period']) &
             (df_filtered['multiplier'] == row['multiplier']) &
             (df_filtered['factor'] == row['factor']) &
             (df_filtered['super_trend_period'] == row['super_trend_period']) &
-            (df_filtered['coin'] != row['coin'])  # Исключаем ту же монету
+            ((df_filtered['coin'] != row['coin']) if coin else True)
             ]
+    elif indicator=='aroon':
+        matching_rows = df_filtered[
+            (df_filtered['aroon_length_trend'] == row['aroon_length_trend']) &
+            (df_filtered['aroon_length'] == row['aroon_length']) &
+            (df_filtered['aroon_smooth'] == row['aroon_smooth']) &
+            (df_filtered['aroon_sign_len'] == row['aroon_sign_len']) &
+            (df_filtered['aroon_gain_limit'] == row['aroon_gain_limit']) &
+            ((df_filtered['coin'] != row['coin']) if not coin else True)
+            ]
+
+    return matching_rows
+def profit_by_coin(df: pd.DataFrame,indicator):
+    best_keys = df.loc[df.groupby('coin')['total_profit'].idxmax()]
+    keys=get_keys(indicator)
+    result = best_keys[keys].copy()
+    result['profit'] = 0.0
+    result['profit_trades'] = 0
+    result['loss_trades'] = 0
+    result['n'] = 0
+    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades']
+    df_filtered = df[keys]
+
+    for idx, row in best_keys.iterrows():
+        matching_rows =  get_matching_rows(df_filtered, row,indicator,coin=True)
 
         if not matching_rows.empty:
             # Суммируем профит и количество сделок
@@ -34,7 +53,7 @@ def profit_by_coin(df: pd.DataFrame):
 
 
 
-def profit_by_coin_using_signals(df: pd.DataFrame, signals: list):
+def profit_by_coin_using_signals(df: pd.DataFrame, signals: list,indicator):
     result = pd.DataFrame(signals)
     result['profit'] = 0.0
     result['profit_trades'] = 0
@@ -44,12 +63,7 @@ def profit_by_coin_using_signals(df: pd.DataFrame, signals: list):
     df_filtered = df[['coin', 'period', 'multiplier', 'factor', 'super_trend_period', 'total_profit', 'profit_trades', 'loss_trades']]
 
     for idx, signal in enumerate(signals):
-        matching_rows = df_filtered[
-            (df_filtered['period'] == signal['period']) &
-            (df_filtered['multiplier'] == signal['multiplier']) &
-            (df_filtered['factor'] == signal['factor']) &
-            (df_filtered['super_trend_period'] == signal['super_trend_period'])
-            ]
+        matching_rows = get_matching_rows(df_filtered,signal,indicator)
 
         if not matching_rows.empty:
             # Суммируем профит и количество сделок для всех монет
@@ -62,7 +76,7 @@ def profit_by_coin_using_signals(df: pd.DataFrame, signals: list):
 
 
 
-def analyze_parameters(df: pd.DataFrame, parameter: str):
+def analyze_parameters(df: pd.DataFrame, parameter: str,indicator):
     analysis_result = df.groupby(parameter).agg({
         'total_profit': 'mean',
         'profit_trades': 'mean',
@@ -83,5 +97,4 @@ def select_top_percent_coins(df: pd.DataFrame, top:int):
     top_percent_coins = max_profit_by_coin[max_profit_by_coin['total_profit'] >= q3]
 
     return top_percent_coins['coin'].tolist()
-
 

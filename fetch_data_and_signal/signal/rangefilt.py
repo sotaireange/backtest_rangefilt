@@ -1,5 +1,3 @@
-
-
 from ta import volatility
 from ta import trend
 import pandas as pd

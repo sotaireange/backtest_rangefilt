@@ -60,7 +60,6 @@ def backtest_coin(df,signals,tp,sl):
     cerebro.addstrategy(BackTestStrategy,signal=signals,take_profit=tp,stop_loss=sl)
     cerebro.adddata(data)
     cerebro.broker.setcash(1000) #Исходный капитал
-    cerebro.broker.setcommission(commission=0.001)
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer,_name='tradeanalyzer')
     strats=cerebro.run()
     res= strats[0].analyzers.getbyname('tradeanalyzer').get_analysis()
