@@ -16,7 +16,7 @@ def get_df_bybit(session,coin,timeframe,limit=1000):
         high_ = []
         low_ = []
         volume_ = []
-        for kln in klines:
+        for kln in klines[1:]:
             date_.append(datetime.fromtimestamp(int(kln[0]) / 1000))
             open_.append(float(kln[1]))
             high_.append(float(kln[2]))
