@@ -1,0 +1,237 @@
+//@version=5
+indicator("Осциллятор Aroon [DaVinchi] v6.3", max_bars_back = 500, format = format.percent, max_labels_count = 500)
+var line[] lines = array.new_line()
+int max_lines = 500  // Максимальное количество линий
+
+//###############################################################################################################
+//###############################################################################################################
+//###############################################################################################################
+// --------------------------------------------------------------------------------------------------------------------
+// 𝙐𝙎𝙀𝙍 𝙄𝙉𝙋𝙐𝙏𝙎
+// --------------------------------------------------------------------------------------------------------------------
+int  length_trend     = input.int(15, title="length_trend") // Параметр длины для расчета скользящих средних
+bool show_levl  = input.bool(false, "Trend Levels") // Флажок для отображения уровней тренда
+
+// Цвета для уровней тренда
+color color_up = input.color(#1eff00, "Вверх", group = "Цвет")
+color color_dn = input.color(#1100ff, "Вниз", group = "Цвет")
+color color_up1 = input.color(#c8ff00, "Смарт Мани Up", group = "Цвет")
+color color_dn1 = input.color(#da00ff, "Смарт Мани Dn", group = "Цвет")
+color color_up2 = input.color(#00f7ff, "Трендовый Up", group = "Цвет")
+color color_dn2 = input.color(#ff0000, "Трендовый Dn", group = "Цвет")
+
+color up = input.color(#c8ff00, "+", group = "Colors", inline = "i") // Цвет для бычьих уровней
+color dn = input.color(#da00ff, "-", group = "Colors", inline = "i") // Цвет для медвежьих уровней
+
+var box1         = box(na) // Инициализация переменной для хранения прямоугольника (уровень тренда)
+series float atr = ta.atr(200) // Расчет среднего истинного диапазона (ATR) с длиной 200 для уровней тренда
+bool m_rev_sig = input.bool(true, "Показывать сигналы на разворот", group = "Сигналы")
+bool trend_sig = input.bool(true, "Показывать сигналы на тренд", group = "Сигналы")
+// --------------------------------------------------------------------------------------------------------------------                         #
+// 𝙄𝙉𝘿𝙄𝘾𝘼𝙏𝙊𝙍 𝘾𝘼𝙇𝘾𝙐𝙇𝘼𝙏𝙄𝙊𝙉𝙎                                                                                                                     #
+// --------------------------------------------------------------------------------------------------------------------                         #
+series float emaValue   = ta.ema(close, length_trend) // EMA на основе цены закрытия                                                            #
+series float correction = close + (close - emaValue) // Корректировка для расчета Zero-Lag                                                      #
+series float zlma       = ta.ema(correction, length_trend) // Zero-Lag Moving Average (ZLMA)                                                    #
+bool  signalUp          = ta.crossover(zlma, emaValue) // Сигнал на бычий кроссовер ZLMA и EMA                                                  #
+bool  signalDn          = ta.crossunder(zlma, emaValue) // Сигнал на медвежий кроссовер ZLMA и EMA                                              #
+// Определение цвета ZLMA в зависимости от направления                                                                                          #
+color zlma_color        = zlma > zlma[3] ? up : zlma < zlma[3] ? dn : na // Цвет ZLMA зависит от того, выше он или ниже уровня 3 баров назад    #
+color ema_col           = emaValue < zlma ? up : dn // Цвет EMA зависит от положения относительно ZLMA                                          #
+
+// --------------------------------------------------------------------------------------------------------------------
+// 𝙑𝙄𝙎𝙐𝘼𝙇𝙄𝙕𝘼𝙏𝙄𝙊𝙉
+// --------------------------------------------------------------------------------------------------------------------
+
+// Отображение Zero-Lag Moving Average (ZLMA) и EMA
+p1 = plot(zlma, color = zlma_color, linewidth = 1) // Построение ZLMA с цветом в зависимости от направления
+p2 = plot(emaValue, color = ema_col, linewidth = 1) // Построение EMA с цветом в зависимости от положения к ZLMA
+fill(p1, p2, zlma, emaValue, color.new(zlma_color, 80), color.new(ema_col, 80)) // Заливка между ZLMA и EMA с прозрачностью
+
+// Метод для создания прямоугольника на графике
+method draw_box(color col, top, bot, price)=>
+    box.new(
+             bar_index, top, bar_index, bot, col, 1,
+             bgcolor         = color.new(col, 90), // Прозрачный фон для прямоугольника
+             text            = str.tostring(math.round(price, 2)), // Округленное значение цены
+             text_size       = size.tiny, // Размер текста
+             text_color      = chart.fg_color, // Цвет текста на графике
+             text_halign     = text.align_right // Выравнивание текста вправо
+             )
+
+// Логика для отображения уровней тренда на графике
+if show_levl // Если отображение уровней включено
+    bool check_signals = signalUp or signalDn // Проверка на наличие бычьего или медвежьего сигнала
+
+    switch
+        // Создание прямоугольника при бычьем сигнале
+        signalUp => box1 := up.draw_box(zlma, zlma - atr, close) // Прямоугольник ниже ZLMA на уровне ATR
+        // Создание прямоугольника при медвежьем сигнале
+        signalDn => box1 := dn.draw_box(zlma + atr, zlma, close) // Прямоугольник выше ZLMA на уровне ATR
+    switch
+        // Расширение прямоугольника вправо при отсутствии нового сигнала
+        not signalUp or not signalDn => box1.set_right(bar_index + 6)
+        => box1 := box(na) // Сброс прямоугольника при новом сигнале
+
+
+// Отрисовка фигур для сигналов вверх и вниз
+// For bullish (up) signal
+plotshape(signalUp and trend_sig and (zlma_color == up and ema_col == up) ? zlma : na,
+          "", shape.diamond, location.absolute, color = up, size = size.normal)
+
+// For bearish (down) signal
+plotshape(signalDn and trend_sig and (zlma_color == dn and ema_col == dn) ? zlma : na,
+          "", shape.diamond, location.absolute, color = dn, size = size.normal)
+
+//###############################################################################################################
+//###############################################################################################################
+//###############################################################################################################
+
+// Входные параметры
+int length = input.int(29, "Длина Арун")
+int smooth = input.int(10, "Сглаживание")
+int sign_len = input.int(5, "Сигнальная линия")
+int gain_limit = 10
+
+// Вычисления
+zero_lag(src, length, gain_limit) =>
+    float alpha = 2 / (length + 1)
+    float ema = na
+    float ec = na
+    float least_error = 1000000
+    float best_gain = 0
+
+    ema := na(ema[1]) ? src : alpha * src + (1 - alpha) * nz(ema[1])
+
+    for int value = -gain_limit to gain_limit
+        float gain = value / 10
+        float ec_temp = na(ec[1]) ? src : nz(ec[1])
+        ec_temp := alpha * (ema + gain * (src - ec_temp)) + (1 - alpha) * ec_temp
+
+        float error = src - ec_temp
+        if math.abs(error) < least_error
+            least_error := math.abs(error)
+            best_gain := gain
+
+    ec := na(ec[1]) ? src : alpha * (ema + best_gain * (src - nz(ec[1]))) + (1 - alpha) * nz(ec[1])
+    ec
+
+aroon(len, smooth) =>
+    float aroonUp = 100 * (ta.highestbars(high, len ) + len) / len
+    float aroonDown = 100 * (ta.lowestbars(low, len ) + len) / len
+    float src = aroonUp - aroonDown
+    zero_lag(src, smooth, gain_limit)
+
+float aroon_osc = aroon(length, smooth)
+float sig_line = ta.sma(aroon_osc, sign_len)
+
+color color_sig = color.new(chart.fg_color, 85)
+
+// Построение графиков
+p3 = plot(aroon_osc, "Осциллятор Арун", color = color.from_gradient(aroon_osc, -80, 80, color_dn, color_up))
+p4 = plot(0, "Нулевая линия", color = color.new(chart.fg_color, 50))
+
+plot(sig_line, "Сигнальная линия", color = bar_index % 2 == 0 ? color.new(chart.fg_color, 50) : na)
+
+fill(p3, p4, 0, -100, na, color_dn)
+fill(p3, p4, 100, 0, color_up, na)
+
+bgcolor(ta.crossover(aroon_osc, 0) ? color.new(color_up, 85) : na)
+bgcolor(ta.crossover(aroon_osc, 0) and trend_sig ? color.new(color_up, 85) : na, force_overlay = true)
+bgcolor(ta.crossunder(aroon_osc, 0) ? color.new(color_dn, 85) : na)
+bgcolor(ta.crossunder(aroon_osc, 0) and trend_sig ? color.new(color_dn, 85) : na, force_overlay = true)
+
+// Графические символы для сигналов на тренд
+if (ta.crossover(aroon_osc, 0) and trend_sig and (zlma_color == up and ema_col == up))
+    label.new(bar_index, low, "🢁\n\nЛонг\n\n",
+              color = color(na),
+              textcolor = color_up,
+              style = label.style_label_up,
+              force_overlay = true)
+
+if (ta.crossunder(aroon_osc, 0) and trend_sig and (zlma_color == dn and ema_col == dn))
+    label.new(bar_index, high, "\n\nШорт\n\n🢃",
+              color = color(na),
+              textcolor = color_dn,
+              style = label.style_label_down,
+              force_overlay = true)
+
+// Условные метки для сигнала на разворот
+if aroon_osc > 0 and ta.crossover(aroon_osc, sig_line) and m_rev_sig and trend_sig and (zlma_color == up and ema_col == up)
+    label.new(bar_index, low, "🢁\nЛонг\n",
+              color = color(na),
+              textcolor = color.new(color_up2, 50),
+              style = label.style_label_up,
+              force_overlay = true)
+
+if aroon_osc < 0 and ta.crossunder(aroon_osc, sig_line) and m_rev_sig and trend_sig and (zlma_color == dn and ema_col == dn)
+    label.new(bar_index, high, "\nШорт\n🢃",
+              color = color(na),
+              textcolor = color_dn2,
+              style = label.style_label_down,
+              force_overlay = true)
+
+// Сигнальные точки на разворот
+plotchar(ta.crossover(aroon_osc, sig_line) ? aroon_osc[0] : na, "Разворот вверх", "☭",
+             location = location.absolute,
+             color = color_up2,
+             size = size.small,
+             offset = 0)
+
+plotchar(ta.crossunder(aroon_osc, sig_line) ? aroon_osc[0] : na, "Разворот вниз", "☭",
+             location = location.absolute,
+             color = color_dn2,
+             size = size.small,
+             offset = 0)
+
+// Сигналы для пересечения нулевой линии
+plotchar(ta.crossover(aroon_osc, 0) ? 0 : na, "Лонг", "❌",
+ location = location.absolute,
+ color = color_up,
+ size = size.tiny,
+ offset = 0)
+plotchar(ta.crossunder(aroon_osc, 0) ? 0 : na, "Шорт", "❌",
+ location = location.absolute,
+ color = color_dn,
+ size = size.tiny,offset = 0)
+
+bgcolor(aroon_osc > 0 ? color.new(color_up, 95) : color.new(color_dn, 95))
+
+if barstate.islast
+    label.delete(
+         label.new(bar_index, aroon_osc, str.tostring(math.round(aroon_osc), format.percent),
+                 color = color(na),
+                 textcolor = aroon_osc > 0 ? color_up : color_dn,
+                 style = label.style_label_left)[1]
+                 )
+
+
+
+// Дополнительные переменные для сигналов
+bool long_signal_cross = ta.crossover(aroon_osc, sig_line) and aroon_osc > 0 and not (ta.crossover(aroon_osc[1], sig_line[1]) and aroon_osc[1] > 0)
+bool short_signal_cross = ta.crossunder(aroon_osc, sig_line) and aroon_osc < 0 and not (ta.crossunder(aroon_osc[1], sig_line[1]) and aroon_osc[1] < 0)
+bool long_graphic_signal_cross = ta.crossover(aroon_osc, 0) and trend_sig and (zlma_color == up and ema_col == up) and not (ta.crossover(aroon_osc[1], 0) and trend_sig[1] and (zlma_color[1] == up and ema_col[1] == up))
+bool short_graphic_signal_cross = ta.crossunder(aroon_osc, 0) and trend_sig and (zlma_color == dn and ema_col == dn) and not (ta.crossunder(aroon_osc[1], 0) and trend_sig[1] and (zlma_color[1] == dn and ema_col[1] == dn))
+
+// Добавление меток при возникновении сигналов
+if (signalUp and trend_sig and (zlma_color == up and ema_col == up))
+    label.new(bar_index, low, "🢁\n\nЛонг\n\n",
+              color = color(na),
+              textcolor = color_up1,
+              style = label.style_label_up,
+              force_overlay = true)
+
+if (signalDn and trend_sig and (zlma_color == dn and ema_col == dn))
+    label.new(bar_index, high, "\n\nШорт\n\n🢃",
+              color = color(na),
+              textcolor = color_dn1,
+              style = label.style_label_down,
+              force_overlay = true)
+
+// Алерты для сигналов тренда на графике
+alertcondition(signalUp and trend_sig and (zlma_color == up and ema_col == up), "🢁 Лонг Сигнал",'{\n"name": "🟢Long_TradingView🟢",  \n"secret": "opsx85yas3",  \n"side": "buy",  \n"symbol": "{{ticker}}"\n}')
+alertcondition(signalDn and trend_sig and (zlma_color == dn and ema_col == dn), "🢃 Шорт Сигнал",'{\n"name": "🔴Short_TradingView🔴", \n"secret": "ydw64uwqtwr", \n"side": "sell", \n"symbol": "{{ticker}}"\n}')
+alertcondition(aroon_osc > 0 and ta.crossover(aroon_osc, sig_line) and m_rev_sig and trend_sig and (zlma_color == up and ema_col == up), "☭ Лонг Разворот", '{\n"name": "🟢Long_TradingView🟢", \n"secret": "opsx85yas3", \n"side": "buy", \n"symbol": "{{ticker}}"\n}')
+alertcondition(aroon_osc < 0 and ta.crossunder(aroon_osc, sig_line) and m_rev_sig and trend_sig and (zlma_color == dn and ema_col == dn), "☭ Шорт Разворот", '{\n"name": "🔴Short_TradingView🔴", \n"secret": "ydw64uwqtwr", \n"side": "sell", \n"symbol": "{{ticker}}"\n}')
+alertcondition(ta.crossover(aroon_osc, 0) and trend_sig and (zlma_color == up and ema_col == up), "❌ Long (График)", '{\n"name": "🟢Long_TradingView🟢",  \n"secret": "opsx85yas3",  \n"side": "buy",  \n"symbol": "{{ticker}}"\n}')
+alertcondition(ta.crossunder(aroon_osc, 0) and trend_sig and (zlma_color == dn and ema_col == dn), "❌ Short (График)", '{\n"name": "🔴Short_TradingView🔴", \n"secret": "ydw64uwqtwr", \n"side": "sell", \n"symbol": "{{ticker}}"\n}')
