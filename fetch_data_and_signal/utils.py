@@ -4,7 +4,7 @@ def get_fieldnames(indicator):
     if indicator == 'rangefilt':
         fieldnames = ['coin', 'timeframe', 'period','multiplier','factor','super_trend_period','total_trades', 'profit_trades', 'loss_trades', 'total_profit']
     elif indicator == 'aroon':
-        fieldnames = ['coin', 'timeframe', 'aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit','total_trades', 'profit_trades', 'loss_trades', 'total_profit']
+        fieldnames = ['coin', 'timeframe', 'aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit','flag_aroon_main','flag_aroon_reverse','flag_aroon_aroon','total_trades', 'profit_trades', 'loss_trades', 'total_profit']
     return fieldnames
 
 
@@ -21,7 +21,10 @@ def get_data_signal(data,indicator):
                      'aroon_length': data.get(indicator,{}).get('by_coin').get('aroon_length'),
                      'aroon_smooth': data.get(indicator,{}).get('by_coin').get('aroon_smooth'),
                      'aroon_sign_len': data.get(indicator,{}).get('by_coin').get('aroon_sign_len'),
-                     'aroon_gain_limit': data.get(indicator,{}).get('by_coin').get('aroon_gain_limit')
+                     'aroon_gain_limit': data.get(indicator,{}).get('by_coin').get('aroon_gain_limit'),
+                     'flag_aroon_main': data.get(indicator,{}).get('by_coin').get('flag_aroon_main'),
+                     'flag_aroon_reverse': data.get(indicator,{}).get('by_coin').get('flag_aroon_reverse'),
+                     'flag_aroon_aroon': data.get(indicator,{}).get('by_coin').get('flag_aroon_aroon')
                      }
     return data_signal
 
@@ -46,10 +49,12 @@ def get_file_or_patch_name(data_signal,timeframe,indicator,stock=False):
                         f'_{data_signal["aroon_length"][-1]}_S_{data_signal["aroon_smooth"][0]}_{data_signal["aroon_smooth"][-1]}'
                         f'_SL_{data_signal["aroon_sign_len"][0]}_{data_signal["aroon_sign_len"][-1]}'
                         f'_GL{data_signal["aroon_gain_limit"][0]}_{data_signal["aroon_gain_limit"][-1]}'
-                        f'_T_{timeframe}_{stock_text}_{indicator}')
+                        f'_T_{timeframe}_{stock_text}_{indicator}'
+                        f'_MRA_{data_signal["flag_aroon_main"][0]}{data_signal["flag_aroon_reverse"][0]}{data_signal["flag_aroon_aroon"][0]}')
         else:
             file_name =(f'LT_{data_signal["aroon_length_trend"]}_L_{data_signal["aroon_length"]}_S_{data_signal["aroon_smooth"]}'
-                        f'_SL_{data_signal["aroon_sign_len"]}_GL_{data_signal["aroon_gain_limit"]}_T_{timeframe}_{indicator}.csv')
+                        f'_SL_{data_signal["aroon_sign_len"]}_GL_{data_signal["aroon_gain_limit"]}_T_{timeframe}_{indicator}'
+                        f'_MRA_{data_signal["flag_aroon_main"]}{data_signal["flag_aroon_reverse"]}{data_signal["flag_aroon_aroon"]}.csv')
     return file_name
 
 
@@ -62,10 +67,10 @@ def get_row(coin,timeframe,data_signal,res,indicator):
             'multiplier': data_signal['multiplier'],
             'factor':data_signal['factor'],
             'super_trend_period':data_signal['super_trend_period'],
-            'total_trades': float(res['total']['total']),
+            'total_trades': float(res.get('total',{}).get('total',0)),
             'profit_trades': float(res.get('won',{}).get('total',0)),
-            'loss_trades': float(res.get('loss',{}).get('total',0)),
-            'total_profit': res['pnl']['net']['total'],
+            'loss_trades': float(res.get('lost',{}).get('total',0)),
+            'total_profit': res.get('pnl',{}).get('net',{}).get('total',0),
         }
     elif indicator=='aroon':
         row = {
@@ -76,9 +81,12 @@ def get_row(coin,timeframe,data_signal,res,indicator):
             'aroon_smooth':data_signal['aroon_smooth'],
             'aroon_sign_len':data_signal['aroon_sign_len'],
             'aroon_gain_limit':data_signal['aroon_gain_limit'],
+            'flag_aroon_main':data_signal['flag_aroon_main'],
+            'flag_aroon_reverse':data_signal['flag_aroon_reverse'],
+            'flag_aroon_aroon':data_signal['flag_aroon_aroon'],
             'total_trades': float(res.get('total',{}).get('total',0)),
             'profit_trades': float(res.get('won',{}).get('total',0)),
-            'loss_trades': float(res.get('loss',{}).get('total',0)),
+            'loss_trades': float(res.get('lost',{}).get('total',0)),
             'total_profit': res.get('pnl',{}).get('net',{}).get('total',0),
         }
     return row

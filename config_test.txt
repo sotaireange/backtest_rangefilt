@@ -1,19 +1,22 @@
+### УДАЛЯЕМ ВСЕ ЧТО СВЯЗАНО С ### и лишние пробелы, копируем в config.json
+
+
 {"rangefilt": {
   "params": {
     "period": {
-      "min": 6,
-      "max": 30
+      "min": 20,
+      "max": 25
     },
     "multiplier": {
-      "min": 2,
+      "min": 3,
       "max": 5
     },
     "factor": {
-      "min": 1,
+      "min": 3,
       "max": 5
     },
     "super_trend_period": {
-      "min":6,
+      "min":25,
       "max": 30
     },
     "timeframe": 30
@@ -36,25 +39,44 @@
       "max": 3
     },
     "aroon_smooth": {
-      "min": 1,
+      "min": 2,
       "max": 2
     },
     "aroon_sign_len": {
-      "min":6,
+      "min":9,
       "max": 10
     },
     "aroon_gain_limit": {
       "min":10,
       "max": 10
     },
+    ### ЗДЕСЬ ВЫБИРАЕМ 0 ДЛЯ ОБОИХХ ЧТОБЫ ПОЛНОСТЬЮ ОТКЛЮЧИТЬ 1 ДЛЯ ВКЛЮЧИТЬ
+
+    "flag_aroon_main": {
+      "min":0,
+      "max": 0
+    },
+    "flag_aroon_reverse": {
+      "min":1,
+      "max": 1
+    },
+    "flag_aroon_aroon": {
+      "min":0,
+      "max": 1
+    },
     "timeframe": 30
   },
   "by_coin": {
-    "aroon_length_trend": 13,
-    "aroon_length": 1,
-    "aroon_smooth": 2,
-    "aroon_sign_len": 2,
-    "aroon_gain_limit": 15,
+    "aroon_length_trend": 29,
+    "aroon_length": 15,
+    "aroon_smooth": 10,
+    "aroon_sign_len": 25,
+    "aroon_gain_limit": 10,
+    "flag_aroon_main" : 0, #0 Отключить #1 ВКЛЮЧИТЬ
+    "flag_aroon_reverse" : 0,
+    "flag_aroon_aroon" : 0,
+
+
     "timeframe": 30
   }},
   "top": [
@@ -64,6 +86,8 @@
   "bybit": 0,
   "tp": 0.04,
   "sl": 0.016,
-  "core": 10,
+  "core": 5,
   "limit": 500
 }
+
+

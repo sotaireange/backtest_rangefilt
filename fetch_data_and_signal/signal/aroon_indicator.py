@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from ta import trend
 
+pd.options.mode.chained_assignment = None
 class AroonOscillator:
     def __init__(self, data={}):
         self.length_trend = int(data.get('aroon_length_trend',15))
@@ -9,7 +10,9 @@ class AroonOscillator:
         self.smooth = int(data.get('aroon_smooth',25))
         self.sign_len = int(data.get('aroon_sign_len',10))
         self.gain_limit = int(data.get('aroon_gain_limit',10))
-
+        self.flag_main= data.get('flag_aroon_main',0)
+        self.flag_reverse= data.get('flag_aroon_reverse',0)
+        self.flag_aroon= data.get('flag_aroon_aroon',0)
 
     def zero_lag(self,src, length, gain_limit):
         alpha = 2 / (length + 1)
@@ -46,10 +49,15 @@ class AroonOscillator:
         return self.zero_lag(src, self.smooth, self.gain_limit)
 
     def crossover(self,series1, series2):
-        return (series1 > series2) & (series1.shift(1) <= series2)
+        if isinstance(series2, (int, float)) and series2 == 0:
+            series2 = pd.Series(0, index=series1.index)
+        return (series1 > series2) & (series1.shift(1) < series2.shift(1))
+
 
     def crossunder(self,series1, series2):
-        return (series1 < series2) & (series1.shift(1) >= series2)
+        if isinstance(series2, (int, float)) and series2 == 0:
+            series2 = pd.Series(0, index=series1.index)
+        return (series1 < series2) & (series1.shift(1) > series2.shift(1))
 
 
     def calculate(self, data):
@@ -78,8 +86,83 @@ class AroonOscillator:
     def get_signal(self,df):
         data=df.copy()
         data=self.calculate(data)
+
+        crossover_signal_sign = self.crossover(data['aroon_osc'], data['sig_line'])
+        crossunder_signal_sign= self.crossunder(data['aroon_osc'], data['sig_line'])
+
         crossover_signal = self.crossover(data['aroon_osc'], 0)
-        crossunder_signal = self.crossunder(data['aroon_osc'], 0)
-        data['Buy'] = (crossover_signal & data['zlma_side'] & data['ema_side'])
-        data['Sell'] = (crossunder_signal & (~data['zlma_side']) & (~data['ema_side']))
-        return data[['Buy','Sell']]
+        crossunder_signal= self.crossunder(data['aroon_osc'], 0)
+
+
+        signal_up=self.crossover(data['ZLMA'],data['EMA'])
+        signal_down=self.crossunder(data['ZLMA'],data['EMA'])
+
+
+        data['buy_main'] = (
+                signal_up &
+                data['zlma_side'] &
+                data['ema_side'] &
+                self.flag_main
+        )
+
+        data['sell_main'] = (
+                signal_down &
+                (~data['zlma_side']) &
+                (~data['ema_side']) &
+                self.flag_main
+        )
+
+        data['buy_reverse'] = (
+                crossover_signal_sign &
+                (data['aroon_osc'] > 0) &
+                data['zlma_side'] &
+                data['ema_side'] &
+                self.flag_reverse
+        )
+
+        data['sell_reverse'] = (
+                crossunder_signal_sign &
+                (data['aroon_osc'] < 0) &
+                (~data['zlma_side']) &
+                (~data['ema_side']) &
+                self.flag_reverse
+        )
+
+        data['buy_aroon'] = (
+                crossover_signal &
+                data['zlma_side'] &
+                data['ema_side'] &
+                self.flag_aroon
+        )
+
+        data['sell_aroon'] = (
+                crossunder_signal &
+                (~data['zlma_side']) &
+                (~data['ema_side']) &
+                self.flag_aroon
+        )
+
+
+        result=data[['buy_main', 'sell_main',
+                     'buy_reverse', 'sell_reverse', 'buy_aroon', 'sell_aroon']]
+
+        buy=result[['buy_main','buy_reverse','buy_aroon']]
+        sell=result[['sell_main','sell_reverse','sell_aroon']]
+        result=pd.DataFrame()
+
+        buy.loc[:, 'buy'] = buy.any(axis=1)
+        buy.loc[:, "source"] = buy.idxmax(axis=1).str.split("_").str[-1]
+        buy.loc[:,"source"] = buy["source"].where(buy["buy"], None)
+
+        sell.loc[:,'sell']=sell.any(axis=1)
+        sell.loc[:,"source"] = sell.idxmax(axis=1).str.split("_").str[-1]
+        sell.loc[:,"source"] = sell["source"].where(sell["sell"], None)
+
+
+
+        result["Buy"] = buy["buy"]
+        result["Sell"] = sell["sell"]
+
+        result["source"] = buy["source"].combine_first(sell["source"])
+
+        return result

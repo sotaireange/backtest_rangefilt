@@ -6,7 +6,7 @@ def get_keys(indicator):
     if indicator=='rangefilt':
         return ['period', 'multiplier', 'factor', 'super_trend_period']
     if indicator=='aroon':
-        return ['aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit']
+        return ['aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit','flag_aroon_main','flag_aroon_reverse','flag_aroon_aroon']
 
 def get_matching_rows(df_filtered,row,indicator,coin=False):
     if indicator=='rangefilt':
@@ -24,6 +24,9 @@ def get_matching_rows(df_filtered,row,indicator,coin=False):
             (df_filtered['aroon_smooth'] == row['aroon_smooth']) &
             (df_filtered['aroon_sign_len'] == row['aroon_sign_len']) &
             (df_filtered['aroon_gain_limit'] == row['aroon_gain_limit']) &
+            (df_filtered['flag_aroon_main'] == row['flag_aroon_main']) &
+            (df_filtered['flag_aroon_reverse'] == row['flag_aroon_reverse']) &
+            (df_filtered['flag_aroon_aroon'] == row['flag_aroon_aroon']) &
             ((df_filtered['coin'] != row['coin']) if coin else True)
             ]
 
