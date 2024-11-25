@@ -50,7 +50,7 @@ def get_file_or_patch_name(data_signal,timeframe,indicator,stock=False):
                         f'_SL_{data_signal["aroon_sign_len"][0]}_{data_signal["aroon_sign_len"][-1]}'
                         f'_GL{data_signal["aroon_gain_limit"][0]}_{data_signal["aroon_gain_limit"][-1]}'
                         f'_T_{timeframe}_{stock_text}_{indicator}'
-                        f'_MRA_{data_signal["flag_aroon_main"][0]}{data_signal["flag_aroon_reverse"][0]}{data_signal["flag_aroon_aroon"][0]}')
+                        f'_MRA_{data_signal["flag_aroon_main"][1]}{data_signal["flag_aroon_reverse"][1]}{data_signal["flag_aroon_aroon"][1]}')
         else:
             file_name =(f'LT_{data_signal["aroon_length_trend"]}_L_{data_signal["aroon_length"]}_S_{data_signal["aroon_smooth"]}'
                         f'_SL_{data_signal["aroon_sign_len"]}_GL_{data_signal["aroon_gain_limit"]}_T_{timeframe}_{indicator}'
