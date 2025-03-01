@@ -81,7 +81,11 @@ async def backtest_coins_by_params(data):
 
         bybit=data.get('bybit',True)
         print(f'Сбор монеток')
-        coins=await get_coins(bybit)
+        all_coins=data['all_coins']
+        if all_coins:
+            coins=await get_coins(bybit)
+        else:
+            coins=data['coins']
         print(f'Найдено монеток {len(coins)}')
 
         df=pd.read_csv(file_path,low_memory=False)

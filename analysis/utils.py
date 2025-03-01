@@ -38,8 +38,9 @@ def profit_by_coin(df: pd.DataFrame,indicator):
     result['profit'] = 0.0
     result['profit_trades'] = 0
     result['loss_trades'] = 0
+    result['profit_loss'] = 0
     result['n'] = 0
-    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades']
+    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades','profit_loss']
     df_filtered = df[keys]
 
     for idx, row in best_keys.iterrows():
@@ -50,6 +51,7 @@ def profit_by_coin(df: pd.DataFrame,indicator):
             result.loc[idx, 'profit'] = matching_rows['total_profit'].sum()
             result.loc[idx, 'profit_trades'] = matching_rows['profit_trades'].sum()
             result.loc[idx, 'loss_trades'] = matching_rows['loss_trades'].sum()
+            result.loc[idx, 'profit_loss'] = matching_rows['profit_loss'].mean()
             result.loc[idx, 'n'] = matching_rows.shape[0]
 
     return result
@@ -62,8 +64,11 @@ def profit_by_coin_using_signals(df: pd.DataFrame, signals: list,indicator):
     result['profit_trades'] = 0
     result['loss_trades'] = 0
     result['n'] = 0
+    result['profit_loss']=0
+    result['profit_loss']=result['profit_loss'].astype('float64')
+
     keys=get_keys(indicator)
-    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades']
+    keys=['coin']+keys+['total_profit', 'profit_trades', 'loss_trades','profit_loss']
     df_filtered = df[keys]
     for idx, signal in enumerate(signals):
         matching_rows = get_matching_rows(df_filtered,signal,indicator)
@@ -73,6 +78,7 @@ def profit_by_coin_using_signals(df: pd.DataFrame, signals: list,indicator):
             result.loc[idx, 'profit'] = matching_rows['total_profit'].sum()
             result.loc[idx, 'profit_trades'] = matching_rows['profit_trades'].sum()
             result.loc[idx, 'loss_trades'] = matching_rows['loss_trades'].sum()
+            result.loc[idx, 'profit_loss'] = matching_rows['profit_loss'].mean()
             result.loc[idx, 'n'] = matching_rows.shape[0]
 
     return result
@@ -83,10 +89,11 @@ def analyze_parameters(df: pd.DataFrame, parameter: str,indicator):
     analysis_result = df.groupby(parameter).agg({
         'total_profit': 'mean',
         'profit_trades': 'mean',
-        'loss_trades': 'mean'
+        'loss_trades': 'mean',
+        'profit_loss':'mean'
     }).reset_index()
 
-    analysis_result.columns = [parameter, 'avg_total_profit', 'avg_profit_trades', 'avg_loss_trades']
+    analysis_result.columns = [parameter, 'avg_total_profit', 'avg_profit_trades', 'avg_loss_trades','avg_profit_loss']
 
     return analysis_result
 

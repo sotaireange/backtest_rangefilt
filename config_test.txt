@@ -82,6 +82,8 @@
   "top": [
     25
   ],
+  "coins":["BTCUSDT","DOGEUSDT"],
+  "all_coins": false,
   "indicator": "aroon", ##### ЗДЕСЬ ВЫБИРАЕМ "aroon" для Аруна, "rangefilt" Для RangeFilt
   "bybit": 0,
   "tp": 0.04,

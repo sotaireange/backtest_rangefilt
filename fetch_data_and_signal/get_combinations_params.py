@@ -27,7 +27,7 @@ def get_data_for_signal(data,only_params=False,indicator='rangefilt'):
         filtered_combinations = [
             dict(zip(parameters.keys(), combination))
             for combination in combinations
-            if sum(combination[i] for i, key in enumerate(parameters.keys()) if key in flag_keys) == 1
+            if sum(combination[i] for i, key in enumerate(parameters.keys()) if key in flag_keys) >= 1
         ]
 
         return filtered_combinations

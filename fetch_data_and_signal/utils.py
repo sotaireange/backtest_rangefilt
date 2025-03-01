@@ -4,7 +4,7 @@ def get_fieldnames(indicator):
     if indicator == 'rangefilt':
         fieldnames = ['coin', 'timeframe', 'period','multiplier','factor','super_trend_period','total_trades', 'profit_trades', 'loss_trades', 'total_profit']
     elif indicator == 'aroon':
-        fieldnames = ['coin', 'timeframe', 'aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit','flag_aroon_main','flag_aroon_reverse','flag_aroon_aroon','total_trades', 'profit_trades', 'loss_trades', 'total_profit']
+        fieldnames = ['coin', 'timeframe', 'aroon_length_trend','aroon_length','aroon_smooth','aroon_sign_len','aroon_gain_limit','flag_aroon_main','flag_aroon_reverse','flag_aroon_aroon','total_trades', 'profit_trades', 'loss_trades', 'total_profit','profit_loss']
     return fieldnames
 
 
@@ -89,5 +89,6 @@ def get_row(coin,timeframe,data_signal,res,indicator):
             'profit_trades': float(res.get('won',{}).get('total',0)),
             'loss_trades': float(res.get('lost',{}).get('total',0)),
             'total_profit': res.get('pnl',{}).get('net',{}).get('total',0),
+            'profit_loss':round(float(res.get('won',{}).get('total',0))/float(res.get('total',{}).get('total',1)),2)
         }
     return row
