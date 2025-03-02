@@ -71,6 +71,7 @@ def get_df_binance(client,coin,timeframe,limit=1000):
 
 
 def get_df(bybit,client,coin,timeframe,limit=1000):
+    limit=min(int(limit),1000)
     if bybit:
         df= get_df_bybit(client,coin,timeframe,limit)
     else:

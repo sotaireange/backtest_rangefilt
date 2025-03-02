@@ -89,6 +89,6 @@ def get_row(coin,timeframe,data_signal,res,indicator):
             'profit_trades': float(res.get('won',{}).get('total',0)),
             'loss_trades': float(res.get('lost',{}).get('total',0)),
             'total_profit': res.get('pnl',{}).get('net',{}).get('total',0),
-            'profit_loss':round(float(res.get('won',{}).get('total',0))/float(res.get('total',{}).get('total',1)),2)
+            'profit_loss':round(float(res.get('won',{}).get('total',0))/max(1,float(res.get('total',{}).get('total',1))),2)
         }
     return row
